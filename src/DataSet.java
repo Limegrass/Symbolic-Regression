@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Set;
 
-
 /**
  * Parse CSV Files into a Data Set type for use
  * as a expression fitness function evaluator 
@@ -14,17 +13,7 @@ import java.util.Set;
  */
 public class DataSet 
 {
-	HashMap<Double, Double> data;
-	
-	/**
-	 * Main function, as a tester
-	 * @param args Arguments
-	 */
-	public static void main(String[] args)
-	{
-		String fileName = "C:/Eclipse Java Workspace/Symbolic Regression/src/dataset1.csv";
-		DataSet dataSet = new DataSet(fileName);
-	}
+	HashMap<HashMap<String, Double>, Double > data;
 
 	
 	/**
@@ -35,7 +24,7 @@ public class DataSet
 	 */
 	public DataSet(String fileName)
 	{
-		data = new HashMap<Double, Double>();	//A map is a logical way to hold all the values
+		data = new HashMap<HashMap<String, Double>, Double >();	//A map is a logical way to hold all the values
 		//An alternative would be a hash map if I knew the range of the data.
 		// For the data sets we seem to be working with, there is two decimals of precision, but
 		// a map will be more robust.
@@ -52,9 +41,12 @@ public class DataSet
 				String[] values = line.split(separator);
 				try
 				{
-					double x = Double.parseDouble(values[0]);
-					double y = Double.parseDouble(values[1]);
-					data.put(x, y);
+					double y = Double.parseDouble(values[values.length-1]);
+					HashMap<String, Double> xVals = new HashMap<String, Double>();
+					for(int i = 0; i<values.length-1; i++){
+						xVals.put( "x" + (i+1) , Double.parseDouble(values[i]));
+					}
+					data.put(xVals, y);
 				}
 				catch(NumberFormatException err)
 				{
@@ -83,35 +75,31 @@ public class DataSet
 				}
 			}
 		}
-	}
+	};
 
+	
+	public double fx(HashMap<String, Double> xValues){
+		return data.get(xValues);
+	}
+	
+	public Set<HashMap<String, Double> > xValues(){
+		return data.keySet();
+	}
+	
 	/**
-	 * Fitness function to complete for checking the
-	 * fitness of a linear regression
-	 * @param expression Expression to evaluate how well it fits the data.
-	 * @return The fitness of the inputed expression tree relative to the data set.
-	 */
-	public double fitness(ExpressionTree expression)
-	{
-		double fitness = 0;
-		//Parse the expression to be a function
-		Set<Double> keySet = data.keySet();
-		int keysIterated = 0;
-		int dataPoints = keySet.size();
-		for(Double x: keySet){
-			//Calculate parsed value
-			//Subtract the different between that and the Map's value for x.
-			//Square the difference
-			//Add it to total fitness
-			keysIterated++;
-			if((double)keysIterated/dataPoints > .5)
-			{
-				break;
-			}
-		}
-		return fitness;
-	}
-
+     * Fitness function to complete for checking the
+     * fitness of a linear regression
+     * @param expression Expression to evaluate how well it fits the data.
+     * @return The fitness of the inputed expression tree relative to the data set.
+     */
+     public double fitness(ExpressionTree expression){
+           double fitness = 0;
+           for(HashMap<String,Double> map : data.keySet()){
+        	   double error = data.get(map) - expression.evaluate(map);
+        	   fitness += error * error;
+           }   
+           return fitness;
+     }
 
 
 }
