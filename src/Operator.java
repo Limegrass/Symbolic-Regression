@@ -7,14 +7,12 @@ public enum Operator {
 		if(this == ADD) {
 			return " + ";
 		}
-
 		if(this == SUBTRACT) {
 			return " - ";
 		}
 		if(this == MULTIPLY) {
 			return " * ";
 		}
-
 		if(this == DIVIDE) {
 			return " / ";
 		}

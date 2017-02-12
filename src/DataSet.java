@@ -24,8 +24,8 @@ public class DataSet
 	 */
 	public DataSet(String fileName)
 	{
-		data = new HashMap<HashMap<String, Double>, Double >();	//A map is a logical way to hold all the values
-		//An alternative would be a hash map if I knew the range of the data.
+		data = new HashMap<HashMap<String, Double>, Double >();	
+		//A map is a logical way to hold all the values
 		// For the data sets we seem to be working with, there is two decimals of precision, but
 		// a map will be more robust.
 		BufferedReader reader = null;	//Reader object 
@@ -43,7 +43,7 @@ public class DataSet
 				{
 					double y = Double.parseDouble(values[values.length-1]);
 					HashMap<String, Double> xVals = new HashMap<String, Double>();
-					for(int i = 0; i<values.length-1; i++){
+					for(int i = 0; i < values.length-1; i++){
 						xVals.put( "x" + (i+1) , Double.parseDouble(values[i]));
 					}
 					data.put(xVals, y);
@@ -53,10 +53,6 @@ public class DataSet
 					//err.printStackTrace();
 				}
 			}
-
-			//				for(int i=0; i<data.size(); i++){
-			//					System.out.println(x.get(i) + " " + y.get(i));
-			//				}
 		} 
 		catch(IOException err)
 		{
@@ -75,14 +71,21 @@ public class DataSet
 				}
 			}
 		}
-	};
+	}
 
-	
+	/**
+	 * Returns the y value for a given map of x values
+	 * @param xValues the map of x values
+	 * @return the y value
+	 */
 	public double fx(HashMap<String, Double> xValues){
 		return data.get(xValues);
 	}
 	
-	public Set<HashMap<String, Double> > xValues(){
+	/**
+	 * @return the set variable name to value pairs
+	 */
+	public Set<HashMap<String, Double>> xValues(){
 		return data.keySet();
 	}
 	
@@ -96,9 +99,9 @@ public class DataSet
            double fitness = 0;
            for(HashMap<String,Double> map : data.keySet()){
         	   double error = data.get(map) - expression.evaluate(map);
-        	   fitness += error * error;
+        	   fitness += (error * error) / data.size();
            }   
-           return fitness;
+           return Math.sqrt(fitness);
      }
 
 

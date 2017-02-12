@@ -1,35 +1,47 @@
 import java.util.*;
 
-
+/**
+ * Stores an expression in a tree structure with operators as internal nodes
+ * variables and coefficients as leaf nodes
+ * 
+ * @author Chris Lamb
+ *
+ */
 public class ExpressionTree implements Comparable<ExpressionTree>{
-	private ExpressionTreeNode root;
-	private double fitness;
-
-
+	
+	/**
+	 * Binary expression tree nodes store node type, value, parent node, left child, and right child 
+	 */
 	public class ExpressionTreeNode {
 		private Type type;
 		private Object value;
 		private ExpressionTreeNode leftChild;
 		private ExpressionTreeNode rightChild;
 		private ExpressionTreeNode parent;
-
-		private ExpressionTreeNode(Type type, Object value) throws IllegalArgumentException{
+		
+		/**
+		 * Constructs an expression tree node
+		 * @param type the type of node operator, variable, or coefficient
+		 * @param value the data
+		 * @throws IllegalArgumentException if the type of the value does not match the type specified
+		 */
+		public ExpressionTreeNode(Type type, Object value) throws IllegalArgumentException{
 			this.type = type;
 			if(type == Type.OPERATOR){
 				if(!(value instanceof Operator)){
-					throw new IllegalArgumentException("Value does not match type");
+					throw new IllegalArgumentException("value does not match type");
 				}
 				this.value = (Operator) value;
 			}
 			else if(type == Type.VARIABLE){
 				if(!(value instanceof String)){
-					throw new IllegalArgumentException("Value does not match type");
+					throw new IllegalArgumentException("value does not match type");
 				}
 				this.value = (String) value;
 			}
 			else if(type == Type.COEFFICIENT){
 				if(!(value instanceof Double)){
-					throw new IllegalArgumentException("Value does not match type");
+					throw new IllegalArgumentException("value does not match type");
 				}
 				this.value = (Double) value;
 			}
@@ -40,7 +52,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			this.rightChild = null;
 			this.parent = null;
 		}
-
+		
+		/**
+		 * Prints the expression represented by the node and its children
+		 */
 		public void print(){
 			if(leftChild != null){
 				System.out.print("(");
@@ -53,13 +68,19 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 		}
 
+		/**
+		 * Returns the value of the expression
+		 * @param variables a map of variable names to values
+		 * @return the value of the expression represented by the node and its children
+		 * @throws IllegalArgumentException if a variable is not defined in the map
+		 */
 		public double evaluate(HashMap<String, Double> variables) throws IllegalArgumentException{
 			if(type == Type.COEFFICIENT){
 				return (double) value;
 			}
 			else if(type == Type.VARIABLE){
 				if(!variables.containsKey(value)){
-					throw new IllegalArgumentException("Variable not defined");
+					throw new IllegalArgumentException("Undefined variable");
 				}
 				return variables.get(value);
 			}
@@ -77,8 +98,8 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				}
 				else if(value == Operator.DIVIDE){
 					if(right == 0.0){
-						//Dividing by 0 returns 1 right now we need to figure out what we want to do with this.
-						return 1.0;
+						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
+						return 1000000.0;
 					}
 					return left / right;
 				}
@@ -86,6 +107,9 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 		}
 
+		/**
+		 * @return the number of nodes in the tree rooted at the node
+		 */
 		public int getSize(){
 			int leftSize = 0;
 			int rightSize = 0;
@@ -97,7 +121,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			return 1 + leftSize + rightSize;
 		}
-
+		
+		/**
+		 * @return a deep copy of the node and its children
+		 */
 		public ExpressionTreeNode copy(){
 			//Recursively creates deep copy of node
 			ExpressionTreeNode copy = new ExpressionTreeNode(type, value);
@@ -112,16 +139,23 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			return copy;
 		}
-
+		
+		/**
+		 * @return a random node in the tree rooted at the node
+		 */
 		public ExpressionTreeNode getRandomNode(){
 			//Get the size of the tree generate a random position less than size return node
 			//in that position of in order traversal
 			int size = this.getSize();
-			Random r = new Random();
-			int position = r.nextInt(size-1);
+			Random random = new Random();
+			int position = random.nextInt(size-1);
 			return getKthNode(position);
 		}
 
+		/**
+		 * @param k the position of the node to be returned
+		 * @return the kth node in an in-order traversal of the tree rooted at the node
+		 */
 		private ExpressionTreeNode getKthNode(int k){
 			int leftSize = 0;
 			if(leftChild != null){
@@ -141,23 +175,40 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 		}
 
-		public void mutate(double mutationRate, int minMutation, int maxMutation, Random r){
+		/**
+		 * If the nodes type is coefficient changes the value of the node by an integer between
+		 * minMutation and maxMutation with the probability of mutationRate
+		 * @param mutationRate the probablility to mutate the node
+		 * @param minMutation the smallest amount to mutate the node by
+		 * @param maxMutation the greatest amout to mutate the node by
+		 * @param random a random number generator
+		 */
+		public void mutate(double mutationRate, int minMutation, int maxMutation, Random random){
 			//Only mutate coefficients
 			if(type == Type.COEFFICIENT){
-				if(r.nextDouble() < mutationRate){
-					value = (double) value + (double) (r.nextInt(maxMutation - minMutation + 1) + minMutation);
+				if(random.nextDouble() < mutationRate){
+					value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
 				}
 			}
 			if(leftChild != null){
-				leftChild.mutate(mutationRate, minMutation, maxMutation, r);
+				leftChild.mutate(mutationRate, minMutation, maxMutation, random);
 			}
 			if(rightChild != null){
-				rightChild.mutate(mutationRate, minMutation, maxMutation, r);
+				rightChild.mutate(mutationRate, minMutation, maxMutation, random);
 			}
 		}
 	}
 
-
+	private ExpressionTreeNode root;
+	private double fitness;
+	
+	/**
+	 * Construcs an expression tree
+	 * @param operators a list of operators to add to the tree
+	 * @param variables a list of variables to add to the tree
+	 * @param coefficients a list of coefficients to add to the tree
+	 * @param data a data set to calculate the fitness of the tree
+	 */
 	public ExpressionTree(List<Operator> operators, List<String> variables, List<Double> coefficients, DataSet data){
 		//Queue to store operator nodes
 		Queue<ExpressionTreeNode> q1 = new LinkedList<ExpressionTreeNode>();
@@ -190,28 +241,51 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		this.root = current;
 		this.fitness = data.fitness(this);
 	}
-
+	
+	/**
+	 * Constructs an expression tree
+	 * @param root the expression tree node that roots the tree
+	 * @param fitness the fitness of the tree
+	 */
 	public ExpressionTree(ExpressionTreeNode root, double fitness){
 		this.root = root;
 		this.fitness = fitness;
 	}
 
+	/**
+	 * @return the root of the tree
+	 */
 	public ExpressionTreeNode getRoot(){
 		return this.root;
 	}
 
+	/**
+	 * @return the fitness of the tree
+	 */
 	public double getFitness(){
 		return this.fitness;
 	}
 
+	/**
+	 * 
+	 * @param variables a map of variables to values
+	 * @return the value of the expression
+	 */
 	public double evaluate(HashMap<String, Double> variables){
 		return root.evaluate(variables);
 	}
-
+	
+	/**
+	 * Prints the expression represented by the tree
+	 */
 	public void print(){
 		root.print();
+		System.out.println();
 	}
-
+	
+	/**
+	 * Returns a deep copy of the tree
+	 */
 	public ExpressionTree clone(){
 		if(root == null){
 			return null;
@@ -220,7 +294,12 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		return new ExpressionTree(root.copy(), fitness);
 	}
 
-	public List<ExpressionTree> crossover(ExpressionTree other){
+	/**
+	 * Combines two trees into two new trees and returns a list containing the new trees
+	 * @param other the tree to be combined with the current tree
+	 * @return a list containing the two new trees
+	 */
+	public List<ExpressionTree> crossover(ExpressionTree other, DataSet data){
 		List<ExpressionTree> output = new ArrayList<ExpressionTree>();
 		//Clone the two expression trees to be crossed over
 		ExpressionTree offspringOne = this.clone();
@@ -252,18 +331,37 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		ExpressionTreeNode temp = crossoverPointOne.parent;
 		crossoverPointOne.parent = crossoverPointTwo.parent;
 		crossoverPointTwo.parent = temp;
+		
+		//Update fitness of offspring
+		offspringOne.fitness = data.fitness(offspringOne);
+		offspringTwo.fitness = data.fitness(offspringTwo);
 
 		output.add(offspringOne);
 		output.add(offspringTwo);
 		return output;
 	}
 
-	public void mutate(double mutationRate, int minMutation, int maxMutation, Random r){
-		root.mutate(mutationRate, minMutation, maxMutation, r);
+	/**
+	 * Changes each of the coefficients of the tree by a value between minMutation and
+	 * maxMutation with a probability of mutationRate
+	 * @param mutationRate the probability to mutate each coefficient
+	 * @param minMutation the smallest mutation amount
+	 * @param maxMutation the largest mutation amount
+	 * @param random a random number generator
+	 */
+	public void mutate(double mutationRate, int minMutation, int maxMutation, Random random){
+		root.mutate(mutationRate, minMutation, maxMutation, random);
 	}
 
+	/**
+	 * Compares two trees 
+	 * @param the expression tree to compare to the current tree
+	 * @return 1 if the fitness of the current tree is greater than other and -1 if the fitness of other tree is
+	 * greater than or equal to the fitness of the current tree
+	 */
 	@Override
 	public int compareTo(ExpressionTree other) {
-		return (this.fitness - other.fitness) > 0.0 ? -1 : 1;
+		//return (this.fitness - other.fitness) > 0.0 ? 1 : -1;
+		return Double.compare(this.fitness, other.fitness);
 	}
 }
