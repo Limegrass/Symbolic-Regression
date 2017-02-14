@@ -1,14 +1,17 @@
 import java.util.*;
 
+
 /**
  * Stores an expression in a tree structure with operators as internal nodes
  * variables and coefficients as leaf nodes
  * 
  * @author Chris Lamb
+ * @author James Ni
  *
  */
 public class ExpressionTree implements Comparable<ExpressionTree>{
-	
+	private ExpressionTreeNode root;
+	private double fitness;
 	/**
 	 * Binary expression tree nodes store node type, value, parent node, left child, and right child 
 	 */
@@ -18,7 +21,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		private ExpressionTreeNode leftChild;
 		private ExpressionTreeNode rightChild;
 		private ExpressionTreeNode parent;
-		
+
 		/**
 		 * Constructs an expression tree node
 		 * @param type the type of node operator, variable, or coefficient
@@ -52,11 +55,12 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			this.rightChild = null;
 			this.parent = null;
 		}
-		
+
 		/**
 		 * Prints the expression represented by the node and its children
 		 */
 		public void print(){
+
 			if(leftChild != null){
 				System.out.print("(");
 				leftChild.print();
@@ -65,16 +69,59 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			if(rightChild != null){
 				rightChild.print();
 				System.out.print(")");
-			}
+			}	
+
 		}
 
+		public boolean simplify(){
+			if(leftChild!=null)
+				leftChild.simplify();
+			if(rightChild!=null)
+				rightChild.simplify();
+			if(this.parent!=null && type==Type.OPERATOR){
+				if(leftChild.type==Type.COEFFICIENT && rightChild.type==Type.COEFFICIENT && this.value != Operator.DIVIDE){
+					this.type = Type.COEFFICIENT;
+					if(value == Operator.ADD){
+						this.value = (double)leftChild.value + (double)rightChild.value;
+					}
+					else if(value == Operator.SUBTRACT){
+
+						this.value = (double)leftChild.value - (double)rightChild.value;
+					}
+					else if(value == Operator.MULTIPLY){
+
+						this.value = (double)leftChild.value * (double)rightChild.value;
+					}
+					//Divide seems to cause more bloat
+//					else{//Only option left is Divide
+//						if((double)rightChild.value == 0.0){
+//							this.value = 100000.0;
+//							return true;
+//						}
+//						this.value = (double)leftChild.value/(double)rightChild.value;
+//					}
+					this.leftChild = null;
+					this.rightChild = null;
+					return false;
+				}
+				else if(leftChild.type==Type.VARIABLE && rightChild.type==Type.VARIABLE
+						&& this.value==Operator.DIVIDE && leftChild.value == rightChild.value){
+					this.type = Type.COEFFICIENT;
+					this.value = 1.0;
+				}
+			}
+			return false;
+		}
+		
+		
 		/**
 		 * Returns the value of the expression
 		 * @param variables a map of variable names to values
 		 * @return the value of the expression represented by the node and its children
 		 * @throws IllegalArgumentException if a variable is not defined in the map
 		 */
-		public double evaluate(HashMap<String, Double> variables) throws IllegalArgumentException{
+		public double evaluate(HashMap<String, Double> variables, boolean[] zeroDivisor) throws IllegalArgumentException{
+			//The boolean is put into an array to force a pass by reference.
 			if(type == Type.COEFFICIENT){
 				return (double) value;
 			}
@@ -85,25 +132,29 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				return variables.get(value);
 			}
 			else{
-				double left = leftChild.evaluate(variables);
-				double right = rightChild.evaluate(variables);
+				double left = leftChild.evaluate(variables, zeroDivisor);
+				double right = rightChild.evaluate(variables, zeroDivisor);
 				if(value == Operator.ADD){
-					return left + right;
+					return left+right;
 				}
 				else if(value == Operator.SUBTRACT){
+
 					return left - right;
 				}
 				else if(value == Operator.MULTIPLY){
+
 					return left * right;
 				}
-				else if(value == Operator.DIVIDE){
-					if(right == 0.0 ){
+				else{//Only option left is Divide
+					if(right == 0.0){
 						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
-						return 1000000.0;
+						zeroDivisor[0] = true; 
+//						return 1000000.0;
+						return 1.0;
 					}
-					return left / right;
+					return left/right;
 				}
-				return 0.0;
+				return eval;
 			}
 		}
 
@@ -121,7 +172,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			return 1 + leftSize + rightSize;
 		}
-		
+
 		/**
 		 * @return a deep copy of the node and its children
 		 */
@@ -139,7 +190,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			return copy;
 		}
-		
+
 		/**
 		 * @return a random node in the tree rooted at the node
 		 */
@@ -147,8 +198,15 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			//Get the size of the tree generate a random position less than size return node
 			//in that position of in order traversal
 			int size = this.getSize();
-			Random random = new Random();
-			int position = random.nextInt(size-1);
+			Random random = new Random(System.nanoTime());
+			int position;
+			if(size>1){
+				position = random.nextInt(size-1);	
+			}
+			else{
+				return this;
+			}
+
 			return getKthNode(position);
 		}
 
@@ -171,6 +229,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			//If left subtree is less than k kth element is k - leftSize - 1st element in right subtree
 			else{
+				
 				return rightChild.getKthNode(k - leftSize - 1);
 			}
 		}
@@ -199,9 +258,8 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		}
 	}
 
-	private ExpressionTreeNode root;
-	private double fitness;
-	
+
+
 	/**
 	 * Construcs an expression tree
 	 * @param operators a list of operators to add to the tree
@@ -239,9 +297,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			q2.add(current);
 		}
 		this.root = current;
+		this.simplify();
 		this.fitness = data.fitness(this);
 	}
-	
+
 	/**
 	 * Constructs an expression tree
 	 * @param root the expression tree node that roots the tree
@@ -272,9 +331,15 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	 * @return the value of the expression
 	 */
 	public double evaluate(HashMap<String, Double> variables){
-		return root.evaluate(variables);
+		boolean[] zeroDivisor = new boolean[1];
+		zeroDivisor[0] = false;
+		double eval = root.evaluate(variables, zeroDivisor);
+		if(zeroDivisor[0]){
+			this.fitness = Double.MAX_VALUE;
+		}
+		return eval;
 	}
-	
+
 	/**
 	 * Prints the expression represented by the tree
 	 */
@@ -282,7 +347,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		root.print();
 		System.out.println();
 	}
-	
+
 	/**
 	 * Returns a deep copy of the tree
 	 */
@@ -294,13 +359,17 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		return new ExpressionTree(root.copy(), fitness);
 	}
 
+	private void simplify(){
+		if(this.root.simplify())
+			this.fitness=Double.MAX_VALUE;
+	}
 	/**
 	 * Combines two trees into two new trees and returns a list containing the new trees
 	 * @param other the tree to be combined with the current tree
 	 * @return a list containing the two new trees
 	 */
-	public List<ExpressionTree> crossover(ExpressionTree other, DataSet data){
-		List<ExpressionTree> output = new ArrayList<ExpressionTree>();
+	public ExpressionTree[] crossover(ExpressionTree other, DataSet data){
+		ExpressionTree[] output = new ExpressionTree[2];
 		//Clone the two expression trees to be crossed over
 		ExpressionTree offspringOne = this.clone();
 		ExpressionTree offspringTwo = other.clone();
@@ -331,17 +400,17 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		ExpressionTreeNode temp = crossoverPointOne.parent;
 		crossoverPointOne.parent = crossoverPointTwo.parent;
 		crossoverPointTwo.parent = temp;
-		
+
 		//Simplify offspring
-		//offspringOne.simplify();
-		//offspringTwo.simplify();
-		
+		offspringOne.simplify();
+		offspringTwo.simplify();
+
 		//Update fitness of offspring
 		offspringOne.fitness = data.fitness(offspringOne);
 		offspringTwo.fitness = data.fitness(offspringTwo);
 
-		output.add(offspringOne);
-		output.add(offspringTwo);
+		output[0] = offspringOne;
+		output[1] = offspringTwo;
 		return output;
 	}
 

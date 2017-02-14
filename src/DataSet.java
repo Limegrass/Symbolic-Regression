@@ -99,9 +99,9 @@ public class DataSet
            double fitness = 0;
            for(HashMap<String,Double> map : data.keySet()){
         	   double error = data.get(map) - expression.evaluate(map);
-        	   fitness += (error * error) / data.size();
+        	   fitness += (error * error) ;
            }   
-           return Math.sqrt(fitness);
+           return fitness;
      }
 
 
