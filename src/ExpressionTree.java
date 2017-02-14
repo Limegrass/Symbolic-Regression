@@ -97,7 +97,11 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 					return left * right;
 				}
 				else if(value == Operator.DIVIDE){
+<<<<<<< HEAD
 					if(right == 0.0 ){
+=======
+					if(right == 0.0){
+>>>>>>> origin/master
 						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
 						return 1000000.0;
 					}
@@ -332,10 +336,13 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		crossoverPointOne.parent = crossoverPointTwo.parent;
 		crossoverPointTwo.parent = temp;
 		
+<<<<<<< HEAD
 		//Simplify offspring
 		//offspringOne.simplify();
 		//offspringTwo.simplify();
 		
+=======
+>>>>>>> origin/master
 		//Update fitness of offspring
 		offspringOne.fitness = data.fitness(offspringOne);
 		offspringTwo.fitness = data.fitness(offspringTwo);
@@ -365,6 +372,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	 */
 	@Override
 	public int compareTo(ExpressionTree other) {
+<<<<<<< HEAD
+=======
+		//return (this.fitness - other.fitness) > 0.0 ? 1 : -1;
+>>>>>>> origin/master
 		return Double.compare(this.fitness, other.fitness);
 	}
 }

@@ -3,9 +3,15 @@ import java.util.*;
 public class ExpressionTreeTester {
 	public static final String FILE_Name = "dataset1.csv";
 	public static final Operator[] OPERATORS = {Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY, Operator.DIVIDE};
+<<<<<<< HEAD
 	public static final int GENERATIONS = 10;
 	public static final int POPULATION_SIZE = 20000;
 	public static final double SURVIVAL_RATE = 0.001;
+=======
+	public static final int GENERATIONS = 20;
+	public static final int POPULATION_SIZE = 20000;
+	public static final double SURVIVAL_RATE = 0.0;
+>>>>>>> origin/master
 	public static final int INITIAL_DEPTH = 3;
 	public static final int NUMBER_OF_VARIABLES = 1;
 	public static final int MIN_COEFFICIENT = -5;
@@ -53,7 +59,11 @@ public class ExpressionTreeTester {
 	 */
 	public static List<ExpressionTree> selectForCrossover(List<ExpressionTree> trees){
 		List<ExpressionTree> output = new ArrayList<ExpressionTree>();
+<<<<<<< HEAD
 		Random random = new Random();
+=======
+		Random random = new Random(System.nanoTime());
+>>>>>>> origin/master
 		double tree1 = random.nextDouble();
 		double tree2 = random.nextDouble();
 		boolean tree1Selected = false;
@@ -86,22 +96,33 @@ public class ExpressionTreeTester {
 		DataSet data = new DataSet(FILE_Name);
 		
 		Random random = new Random();
+<<<<<<< HEAD
 		
 		System.out.println("Generating initial population...");
+=======
+
+>>>>>>> origin/master
 		List<ExpressionTree> trees = new ArrayList<ExpressionTree>();
 		for(int i = 0; i < POPULATION_SIZE; i++){
 			trees.add(generateRandomTree(INITIAL_DEPTH, NUMBER_OF_VARIABLES, random, data));
 		}
 		Collections.sort(trees);
+<<<<<<< HEAD
 		System.out.println("Best initial tree:");
 		trees.get(0).print();
 		System.out.println(trees.get(0).getFitness());
 		System.out.println();
+=======
+>>>>>>> origin/master
 		
 		ExpressionTree bestTree = trees.get(0);
 		
 		for(int i = 1; i <= GENERATIONS; i++){
+<<<<<<< HEAD
 			System.out.println("Generating generation " + i + " ...");
+=======
+			System.out.println("Generating generation " + i);
+>>>>>>> origin/master
 			List<ExpressionTree> nextGen = new ArrayList<ExpressionTree>();
 			int survivors = (int) Math.ceil(POPULATION_SIZE * SURVIVAL_RATE);
 			for(int j = 0; j < survivors; j++){
