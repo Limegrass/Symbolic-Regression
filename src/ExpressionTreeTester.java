@@ -1,20 +1,19 @@
 import java.util.*;
 
 public class ExpressionTreeTester {
-	public static final String DATASET1 = "dataset1.csv";
-	public static final String DATASET2 = "dataset2.csv";
-	public static final String DATASET3 = "dataset3.csv";
+	public static final String FILE_Name = "dataset2.csv";
 	public static final Operator[] OPERATORS = {Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY, Operator.DIVIDE};
 	public static final int GENERATIONS = 10;
-	public static final int POPULATION_SIZE = 20000;
-	public static final double SURVIVAL_RATE = 0.001;
-	public static final int INITIAL_DEPTH = 3;
-	public static final int NUMBER_OF_VARIABLES = 1;
-	public static final int MIN_COEFFICIENT = -5;
-	public static final int MAX_COEFFICIENT = 5;
-	public static final int MIN_MUTATION = -1;
-	public static final int MAX_MUTATION = 1;
-	public static final double MUTATION_RATE = .1;
+	public static final double CUT_OFF = .1;
+	public static final int POPULATION_SIZE = 1000;
+	public static final double SURVIVAL_RATE = 0.0;
+	public static final int INITIAL_DEPTH = 4;
+	public static final int NUMBER_OF_VARIABLES = 3;
+	public static final int MIN_COEFFICIENT = -1000;
+	public static final int MAX_COEFFICIENT = 1000;
+	public static final int MIN_MUTATION = -100;
+	public static final int MAX_MUTATION = 100;
+	public static final double MUTATION_RATE = .02;
 
 
 	/**
@@ -42,7 +41,10 @@ public class ExpressionTreeTester {
 		}
 		List<Double> coefficients = new ArrayList<Double>();
 		for(int i = 0; i < numberOfOperators - numberOfVariables + 1; i++){
-			coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
+			//For real coefficients
+			coefficients.add((double)(random.nextDouble() * (MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
+			//For integer coefficient
+			//coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
 		}
 		return new ExpressionTree(ops, vars, coefficients, data);
 	}
@@ -55,7 +57,7 @@ public class ExpressionTreeTester {
 	 */
 	public static ExpressionTree[] selectForCrossover(List<ExpressionTree> trees){
 		ExpressionTree[] output = new ExpressionTree[2];
-		Random random = new Random(System.nanoTime());
+		Random random = new Random();
 		double tree1 = random.nextDouble();
 		double tree2 = random.nextDouble();
 		boolean tree1Selected = false;
@@ -69,32 +71,30 @@ public class ExpressionTreeTester {
 		for(int i = 0; i < treeCount; i++){
 			probability += (totalFitness - trees.get(i).getFitness()) / totalFitness;
 			if(!tree1Selected && probability > tree1){
-				output[0]=trees.get(i);
-				tree1Selected = true;	
+				output[0] = trees.get(i);
+				tree1Selected = true;
 			}
 			if(!tree2Selected && probability > tree2){
-				output[1]=trees.get(i);
+				output[1] = trees.get(i);
 				tree2Selected = true;
 			}
 			if(tree1Selected && tree2Selected){
 				break;
 			}
 		}
-		if(output[0]==output[1]){
-			output[1] = trees.get(random.nextInt(trees.size())); //Force genetic diversity
+		while(output[0] == output[1]){
+			output[1] = trees.get(random.nextInt(treeCount));
 		}
 		return output;
+
 	}
 
-	
-	
 	public static void main(String[] args) {
-		double start = System.nanoTime(); //Run time testing
-		DataSet data = new DataSet(DATASET1);
+		DataSet data = new DataSet(FILE_Name);
 
-		Random random = new Random(System.nanoTime());
+		Random random = new Random();
 
-		System.out.println("Now Generating initial population...");
+		System.out.println("Generating initial population...");
 		List<ExpressionTree> trees = new ArrayList<ExpressionTree>();
 		for(int i = 0; i < POPULATION_SIZE; i++){
 			trees.add(generateRandomTree(INITIAL_DEPTH, NUMBER_OF_VARIABLES, random, data));
@@ -106,9 +106,10 @@ public class ExpressionTreeTester {
 		System.out.println();
 
 		ExpressionTree bestTree = trees.get(0);
-		int i=1;
-		//		for(int i = 1; i <= GENERATIONS; i++){
-		while(bestTree.getFitness()>20.0){
+
+		//for(int i = 1; i <= GENERATIONS; i++){
+		int i = 1;
+		while(bestTree.getFitness() > CUT_OFF){
 			System.out.println("Generating generation " + i + " ...");
 			List<ExpressionTree> nextGen = new ArrayList<ExpressionTree>();
 			int survivors = (int) Math.ceil(POPULATION_SIZE * SURVIVAL_RATE);
@@ -120,10 +121,12 @@ public class ExpressionTreeTester {
 				ExpressionTree[] offspring = crossover[0].crossover(crossover[1], data);
 				offspring[0].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
 				offspring[1].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
-				if(offspring[0].getFitness()!=crossover[0].getFitness() && offspring[0].getFitness()!=crossover[1].getFitness())
-				nextGen.add(offspring[0]);
-				if(offspring[1].getFitness()!=crossover[0].getFitness() && offspring[1].getFitness()!=crossover[1].getFitness())
-				nextGen.add(offspring[1]);
+				if(offspring[0].getFitness() != crossover[0].getFitness() && offspring[0].getFitness() != crossover[1].getFitness()){
+					nextGen.add(offspring[0]);
+				}
+				if(offspring[1].getFitness() != crossover[0].getFitness() && offspring[1].getFitness() != crossover[1].getFitness()){
+					nextGen.add(offspring[1]);
+				}
 			}
 			trees = nextGen;
 			Collections.sort(trees);
@@ -139,7 +142,6 @@ public class ExpressionTreeTester {
 		System.out.println("Best fit:");
 		bestTree.print();
 		System.out.println(bestTree.getFitness());
-		System.out.println("Execution Time (s): " + (System.nanoTime()-start)/1000000000);
 	}
 
 }

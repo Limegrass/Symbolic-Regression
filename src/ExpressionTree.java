@@ -1,13 +1,11 @@
 import java.util.*;
 
-
 /**
  * Stores an expression in a tree structure with operators as internal nodes
  * variables and coefficients as leaf nodes
  * 
  * @author Chris Lamb
  * @author James Ni
- *
  */
 public class ExpressionTree implements Comparable<ExpressionTree>{
 	private ExpressionTreeNode root;
@@ -21,6 +19,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		private ExpressionTreeNode leftChild;
 		private ExpressionTreeNode rightChild;
 		private ExpressionTreeNode parent;
+		private int size;
 
 		/**
 		 * Constructs an expression tree node
@@ -54,13 +53,13 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			this.leftChild = null;
 			this.rightChild = null;
 			this.parent = null;
+			this.size = 1;
 		}
 
 		/**
 		 * Prints the expression represented by the node and its children
 		 */
 		public void print(){
-
 			if(leftChild != null){
 				System.out.print("(");
 				leftChild.print();
@@ -69,18 +68,55 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			if(rightChild != null){
 				rightChild.print();
 				System.out.print(")");
-			}	
+			}
+		}
 
+		/**
+		 * Returns the value of the expression
+		 * @param variables a map of variable names to values
+		 * @return the value of the expression represented by the node and its children
+		 * @throws IllegalArgumentException if a variable is not defined in the map
+		 */
+		public double evaluate(HashMap<String, Double> variables) throws IllegalArgumentException{
+			if(type == Type.COEFFICIENT){
+				return (double) value;
+			}
+			else if(type == Type.VARIABLE){
+				if(!variables.containsKey(value)){
+					throw new IllegalArgumentException("Undefined variable");
+				}
+				return variables.get(value);
+			}
+			else{
+				double left = leftChild.evaluate(variables);
+				double right = rightChild.evaluate(variables);
+				if(value == Operator.ADD){
+					return left + right;
+				}
+				else if(value == Operator.SUBTRACT){
+					return left - right;
+				}
+				else if(value == Operator.MULTIPLY){
+					return left * right;
+				}
+				else if(value == Operator.DIVIDE){
+					if(right == 0.0 ){
+						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
+						return left;
+					}
+					return left / right;
+				}
+				return 0.0;
+			}
 		}
 
 		public boolean simplify(){
-			if(leftChild!=null)
+			if(leftChild != null)
 				leftChild.simplify();
-			if(rightChild!=null)
+			if(rightChild != null)
 				rightChild.simplify();
 			if(this.parent!=null && type==Type.OPERATOR){
-				if(leftChild.type==Type.COEFFICIENT && rightChild.type==Type.COEFFICIENT && this.value != Operator.DIVIDE){
-					this.type = Type.COEFFICIENT;
+				if(leftChild.type==Type.COEFFICIENT && rightChild.type==Type.COEFFICIENT){
 					if(value == Operator.ADD){
 						this.value = (double)leftChild.value + (double)rightChild.value;
 					}
@@ -92,85 +128,44 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 
 						this.value = (double)leftChild.value * (double)rightChild.value;
 					}
-					//Divide seems to cause more bloat
-//					else{//Only option left is Divide
-//						if((double)rightChild.value == 0.0){
-//							this.value = 100000.0;
-//							return true;
-//						}
-//						this.value = (double)leftChild.value/(double)rightChild.value;
-//					}
+					//Operation is division
+					else{
+						if(leftChild != null && rightChild != null){
+							this.size = 1 + leftChild.size + rightChild.size;
+						}
+						if((double)rightChild.value == 0.0){
+							return true;
+						}
+						return false;
+					}
 					this.leftChild = null;
 					this.rightChild = null;
-					return false;
-				}
-				else if(leftChild.type==Type.VARIABLE && rightChild.type==Type.VARIABLE
-						&& this.value==Operator.DIVIDE && leftChild.value == rightChild.value){
+					
 					this.type = Type.COEFFICIENT;
-					this.value = 1.0;
+					this.size = 1;
+					
 				}
+				else if(leftChild.type==Type.VARIABLE && rightChild.type==Type.VARIABLE && this.value==Operator.DIVIDE
+						&& leftChild.value == rightChild.value){	
+					this.value = 1.0;
+					this.leftChild = null;
+					this.rightChild = null;
+					
+					this.type = Type.COEFFICIENT;
+					this.size = 1;
+				}
+			}
+			if(leftChild != null && rightChild != null){
+				this.size = 1 + leftChild.size + rightChild.size;
 			}
 			return false;
-		}
-		
-		
-		/**
-		 * Returns the value of the expression
-		 * @param variables a map of variable names to values
-		 * @return the value of the expression represented by the node and its children
-		 * @throws IllegalArgumentException if a variable is not defined in the map
-		 */
-		public double evaluate(HashMap<String, Double> variables, boolean[] zeroDivisor) throws IllegalArgumentException{
-			//The boolean is put into an array to force a pass by reference.
-			if(type == Type.COEFFICIENT){
-				return (double) value;
-			}
-			else if(type == Type.VARIABLE){
-				if(!variables.containsKey(value)){
-					throw new IllegalArgumentException("Undefined variable");
-				}
-				return variables.get(value);
-			}
-			else{
-				double left = leftChild.evaluate(variables, zeroDivisor);
-				double right = rightChild.evaluate(variables, zeroDivisor);
-				if(value == Operator.ADD){
-					return left+right;
-				}
-				else if(value == Operator.SUBTRACT){
-
-					return left - right;
-				}
-				else if(value == Operator.MULTIPLY){
-
-					return left * right;
-				}
-				else{//Only option left is Divide
-					if(right == 0.0){
-						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
-						zeroDivisor[0] = true; 
-//						return 1000000.0;
-						return 1.0;
-					}
-					return left/right;
-				}
-				return eval;
-			}
 		}
 
 		/**
 		 * @return the number of nodes in the tree rooted at the node
 		 */
 		public int getSize(){
-			int leftSize = 0;
-			int rightSize = 0;
-			if(leftChild != null){
-				leftSize = leftChild.getSize();
-			}
-			if(rightChild != null){
-				rightSize = rightChild.getSize();
-			}
-			return 1 + leftSize + rightSize;
+			return this.size;
 		}
 
 		/**
@@ -188,6 +183,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				copy.rightChild = rightChild.copy();
 				copy.rightChild.parent = copy;
 			}
+			copy.size = this.size;
 			return copy;
 		}
 
@@ -198,15 +194,8 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			//Get the size of the tree generate a random position less than size return node
 			//in that position of in order traversal
 			int size = this.getSize();
-			Random random = new Random(System.nanoTime());
-			int position;
-			if(size>1){
-				position = random.nextInt(size-1);	
-			}
-			else{
-				return this;
-			}
-
+			Random random = new Random();
+			int position = random.nextInt(size-1);
 			return getKthNode(position);
 		}
 
@@ -229,7 +218,6 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			//If left subtree is less than k kth element is k - leftSize - 1st element in right subtree
 			else{
-				
 				return rightChild.getKthNode(k - leftSize - 1);
 			}
 		}
@@ -246,7 +234,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			//Only mutate coefficients
 			if(type == Type.COEFFICIENT){
 				if(random.nextDouble() < mutationRate){
-					value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
+					//For real coefficients
+					value = (double) value + (double) (random.nextDouble() * (maxMutation - minMutation + 1) + minMutation);
+					//For integer coefficients
+					//value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
 				}
 			}
 			if(leftChild != null){
@@ -258,7 +249,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		}
 	}
 
-
+	
 
 	/**
 	 * Construcs an expression tree
@@ -293,11 +284,12 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			current.leftChild.parent = current;
 			current.rightChild = q2.poll();
 			current.rightChild.parent = current;
+			//Update size of current
+			current.size = 1 + current.rightChild.size + current.leftChild.size;
 			//Add the newly created terminal node back to q2
 			q2.add(current);
 		}
 		this.root = current;
-		this.simplify();
 		this.fitness = data.fitness(this);
 	}
 
@@ -331,13 +323,13 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	 * @return the value of the expression
 	 */
 	public double evaluate(HashMap<String, Double> variables){
-		boolean[] zeroDivisor = new boolean[1];
-		zeroDivisor[0] = false;
-		double eval = root.evaluate(variables, zeroDivisor);
-		if(zeroDivisor[0]){
+		return root.evaluate(variables);
+	}
+	
+	public void simplify(){
+		if(this.root.simplify()){
 			this.fitness = Double.MAX_VALUE;
 		}
-		return eval;
 	}
 
 	/**
@@ -359,10 +351,6 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		return new ExpressionTree(root.copy(), fitness);
 	}
 
-	private void simplify(){
-		if(this.root.simplify())
-			this.fitness=Double.MAX_VALUE;
-	}
 	/**
 	 * Combines two trees into two new trees and returns a list containing the new trees
 	 * @param other the tree to be combined with the current tree
@@ -401,13 +389,23 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		crossoverPointOne.parent = crossoverPointTwo.parent;
 		crossoverPointTwo.parent = temp;
 
-		//Simplify offspring
-		offspringOne.simplify();
-		offspringTwo.simplify();
+		//Update size
+		while(crossoverPointOne.parent != null){
+			crossoverPointOne = crossoverPointOne.parent;
+			crossoverPointOne.size = 1 + crossoverPointOne.leftChild.size + crossoverPointOne.rightChild.size;
+		}
+		while(crossoverPointTwo.parent != null){
+			crossoverPointTwo = crossoverPointTwo.parent;
+			crossoverPointTwo.size = 1 + crossoverPointTwo.leftChild.size + crossoverPointTwo.rightChild.size;
+		}
 
 		//Update fitness of offspring
 		offspringOne.fitness = data.fitness(offspringOne);
 		offspringTwo.fitness = data.fitness(offspringTwo);
+		
+		//Simplify offspring
+		offspringOne.simplify();
+		offspringTwo.simplify();
 
 		output[0] = offspringOne;
 		output[1] = offspringTwo;

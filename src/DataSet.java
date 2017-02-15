@@ -14,8 +14,9 @@ import java.util.Set;
 public class DataSet 
 {
 	HashMap<HashMap<String, Double>, Double > data;
+	HashMap<HashMap<String, Double>, Double > test;
 
-	
+
 	/**
 	 * Data set constructor using a CSV file
 	 * Assumed two columns of data, an input column and
@@ -24,14 +25,15 @@ public class DataSet
 	 */
 	public DataSet(String fileName)
 	{
-		data = new HashMap<HashMap<String, Double>, Double >();	
+		data = new HashMap<HashMap<String, Double>, Double >();
+		test = new HashMap<HashMap<String, Double>, Double >();
 		//A map is a logical way to hold all the values
 		// For the data sets we seem to be working with, there is two decimals of precision, but
 		// a map will be more robust.
 		BufferedReader reader = null;	//Reader object 
 		String line = "";				//String for line by line reading
 		String separator = ",";			//Changeable parameter if the CSV is delimited by something else
-		
+		int j = 1;
 		try{
 			//Initialize the BufferedReader
 			reader = new BufferedReader(new FileReader(fileName));
@@ -46,7 +48,13 @@ public class DataSet
 					for(int i = 0; i < values.length-1; i++){
 						xVals.put( "x" + (i+1) , Double.parseDouble(values[i]));
 					}
-					data.put(xVals, y);
+					if(j % 2 == 0){
+						data.put(xVals, y);
+					}
+					else{
+						test.put(xVals, y);
+					}
+					j++;
 				}
 				catch(NumberFormatException err)
 				{
@@ -81,28 +89,28 @@ public class DataSet
 	public double fx(HashMap<String, Double> xValues){
 		return data.get(xValues);
 	}
-	
+
 	/**
 	 * @return the set variable name to value pairs
 	 */
 	public Set<HashMap<String, Double>> xValues(){
 		return data.keySet();
 	}
-	
+
 	/**
-     * Fitness function to complete for checking the
-     * fitness of a linear regression
-     * @param expression Expression to evaluate how well it fits the data.
-     * @return The fitness of the inputed expression tree relative to the data set.
-     */
-     public double fitness(ExpressionTree expression){
-           double fitness = 0;
-           for(HashMap<String,Double> map : data.keySet()){
-        	   double error = data.get(map) - expression.evaluate(map);
-        	   fitness += (error * error) ;
-           }   
-           return fitness;
-     }
+	 * Fitness function to complete for checking the
+	 * fitness of a linear regression
+	 * @param expression Expression to evaluate how well it fits the data.
+	 * @return The fitness of the inputed expression tree relative to the data set.
+	 */
+	public double fitness(ExpressionTree expression){
+		double fitness = 0;
+		for(HashMap<String,Double> map : data.keySet()){
+			double error = data.get(map) - expression.evaluate(map);
+			fitness += (error * error) / data.size();
+		}   
+		return Math.sqrt(fitness);
+	}
 
 
 }
