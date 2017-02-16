@@ -10,6 +10,7 @@ import java.util.*;
 public class ExpressionTree implements Comparable<ExpressionTree>{
 	private ExpressionTreeNode root;
 	private double fitness;
+	public static final double EPSILON = 2.5E-1;
 	/**
 	 * Binary expression tree nodes store node type, value, parent node, left child, and right child 
 	 */
@@ -61,13 +62,15 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		 */
 		public void print(){
 			if(leftChild != null){
-				System.out.print("(");
+				if(parent!=null)
+					System.out.print("(");
 				leftChild.print();
 			}
 			System.out.print(value.toString() + "");
 			if(rightChild != null){
 				rightChild.print();
-				System.out.print(")");
+				if(parent!=null)
+					System.out.print(")");
 			}
 		}
 
@@ -121,7 +124,6 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 						this.value = (double)leftChild.value + (double)rightChild.value;
 					}
 					else if(value == Operator.SUBTRACT){
-
 						this.value = (double)leftChild.value - (double)rightChild.value;
 					}
 					else if(value == Operator.MULTIPLY){
@@ -136,23 +138,187 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 						if((double)rightChild.value == 0.0){
 							return true;
 						}
-						return false;
+
+						this.value = (double)leftChild.value / (double)rightChild.value;
+						//						return false;
 					}
+
 					this.leftChild = null;
 					this.rightChild = null;
-					
+
 					this.type = Type.COEFFICIENT;
 					this.size = 1;
-					
+
 				}
 				else if(leftChild.type==Type.VARIABLE && rightChild.type==Type.VARIABLE && this.value==Operator.DIVIDE
 						&& leftChild.value == rightChild.value){	
 					this.value = 1.0;
 					this.leftChild = null;
 					this.rightChild = null;
-					
 					this.type = Type.COEFFICIENT;
 					this.size = 1;
+				}
+				else if((leftChild.type==Type.VARIABLE && rightChild.type==Type.VARIABLE && this.value==Operator.SUBTRACT
+						&& leftChild.value == rightChild.value) 
+						|| (leftChild.type==Type.COEFFICIENT && (double)leftChild.value ==  0.0 && (this.value == Operator.MULTIPLY || this.value == Operator.DIVIDE)) 
+						|| (rightChild.type==Type.COEFFICIENT && (double)rightChild.value == 0.0 && this.value == Operator.MULTIPLY )){	
+					this.value = 0.0;
+					this.leftChild = null;
+					this.rightChild = null;
+					this.type = Type.COEFFICIENT;
+					this.size = 1;
+				}
+//				else if((this.value == Operator.SUBTRACT || this.value == Operator.ADD) && ((leftChild.type==Type.COEFFICIENT && (double)leftChild.value == 0.0) 
+//						|| (rightChild.type==Type.COEFFICIENT && (double)rightChild.value == 0.0))){
+//
+//					if(leftChild.type == Type.COEFFICIENT && (double)leftChild.value == 0.0){
+//						this.value = rightChild.value;
+//					}
+//					else if(rightChild.type == Type.COEFFICIENT && (double)rightChild.value == 0.0){
+//						this.value = leftChild.value;
+//					}
+//					this.leftChild = null;
+//					this.rightChild = null;
+//					this.type = Type.COEFFICIENT;
+//					this.size = 1;
+//				}
+
+			}
+			
+			
+			
+			
+			
+			if(this.type==Type.OPERATOR && this.parent!=null && this.parent.type==Type.OPERATOR){
+				ExpressionTreeNode other;
+				if(this.parent.leftChild==this){
+					other = this.parent.rightChild;
+				}
+				else{
+					other = this.parent.leftChild;
+				}
+				if(this.leftChild!=null && this.rightChild!=null && other.leftChild!=null && other.rightChild!=null){
+					if(this.leftChild.type == Type.VARIABLE && this.rightChild.type==Type.COEFFICIENT){
+						if(other.leftChild.type == Type.VARIABLE && other.rightChild.type==Type.COEFFICIENT 
+								&& this.leftChild.value == other.leftChild.value){
+							this.type = Type.VARIABLE;
+							this.value = leftChild.value;
+							other.type = Type.COEFFICIENT;
+							if(parent.value == Operator.ADD){
+								other.value = (double)rightChild.value + (double)other.rightChild.value;
+							}
+							else if(parent.value == Operator.SUBTRACT){
+								other.value = (double)rightChild.value - (double)other.rightChild.value;
+							}
+							else if(parent.value == Operator.MULTIPLY){
+
+								other.value = (double)rightChild.value * (double)other.rightChild.value;
+							}
+							//Operation is division
+							else{
+								other.value = (double)rightChild.value / (double)other.rightChild.value;
+							}
+							this.size = 1;
+							other.size = 1;
+							this.parent.size = 1 + this.size + other.size;
+							this.leftChild = null;
+							this.rightChild = null;
+							other.leftChild = null;
+							other.rightChild = null;
+						}
+						else if(other.leftChild.type == Type.COEFFICIENT && other.rightChild.type==Type.VARIABLE
+								&& this.leftChild.value == other.rightChild.value){
+							this.type = Type.VARIABLE;
+							this.value = leftChild.value;
+							other.type = Type.COEFFICIENT;
+							if(parent.value == Operator.ADD){
+								other.value = (double)rightChild.value + (double)other.leftChild.value;
+							}
+							else if(parent.value == Operator.SUBTRACT){
+								other.value = (double)rightChild.value - (double)other.leftChild.value;
+							}
+							else if(parent.value == Operator.MULTIPLY){
+
+								other.value = (double)rightChild.value * (double)other.leftChild.value;
+							}
+							//Operation is division
+							else{
+								other.value = (double)rightChild.value / (double)other.leftChild.value;
+							}
+							this.size = 1;
+							other.size = 1;
+							this.parent.size = 1 + this.size + other.size;
+							this.leftChild = null;
+							this.rightChild = null;
+							other.leftChild = null;
+							other.rightChild = null;
+						}
+					}
+					else if(this.leftChild.type == Type.COEFFICIENT && this.rightChild.type==Type.VARIABLE){
+						if(other.leftChild.type == Type.VARIABLE && other.rightChild.type==Type.COEFFICIENT
+								&& this.rightChild.value == other.leftChild.value){
+							this.type = Type.VARIABLE;
+							this.value = rightChild.value;
+							other.type = Type.COEFFICIENT;
+							if(parent.value == Operator.ADD){
+								other.value = (double)leftChild.value + (double)other.rightChild.value;
+							}
+							else if(parent.value == Operator.SUBTRACT){
+								other.value = (double)leftChild.value - (double)other.rightChild.value;
+							}
+							else if(parent.value == Operator.MULTIPLY){
+
+								other.value = (double)leftChild.value * (double)other.rightChild.value;
+							}
+							//Operation is division
+							else{
+								other.value = (double)leftChild.value / (double)other.rightChild.value;
+							}
+							this.size = 1;
+							other.size = 1;
+							this.parent.size = 1 + this.size + other.size;
+							this.leftChild = null;
+							this.rightChild = null;
+							other.leftChild = null;
+							other.rightChild = null;
+						}
+						else if(other.leftChild.type == Type.COEFFICIENT && other.rightChild.type==Type.VARIABLE
+								&& this.rightChild.value == other.rightChild.value){
+							this.type = Type.VARIABLE;
+							this.value = rightChild.value;
+							other.type = Type.COEFFICIENT;
+							if(parent.value == Operator.ADD){
+								other.value = (double)leftChild.value + (double)other.leftChild.value;
+							}
+							else if(parent.value == Operator.SUBTRACT){
+								other.value = (double)leftChild.value - (double)other.leftChild.value;
+							}
+							else if(parent.value == Operator.MULTIPLY){
+
+								other.value = (double)leftChild.value * (double)other.leftChild.value;
+							}
+							//Operation is division
+							else{
+								other.value = (double)leftChild.value / (double)other.leftChild.value;
+							}
+							this.size = 1;
+							other.size = 1;
+							this.parent.size = 1 + this.size + other.size;
+							this.leftChild = null;
+							this.rightChild = null;
+							other.leftChild = null;
+							other.rightChild = null;
+						}
+					}
+				}
+			}
+			
+			if(this.type == Type.COEFFICIENT){
+				if((double)this.value-EPSILON < Math.floor((double)this.value)){
+					this.value = Math.floor((double)this.value);
+				}
+				else if((double)this.value+EPSILON < Math.ceil((double)this.value)){
+					this.value = Math.ceil((double)this.value);
 				}
 			}
 			if(leftChild != null && rightChild != null){
@@ -235,9 +401,9 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			if(type == Type.COEFFICIENT){
 				if(random.nextDouble() < mutationRate){
 					//For real coefficients
-					value = (double) value + (double) ((maxMutation - minMutation + 1) + minMutation);
+					value = (double) value + (double) (random.nextDouble() * (maxMutation - minMutation + 1) + minMutation);
 					//For integer coefficients
-					//value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
+					//					value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
 				}
 			}
 			if(leftChild != null){
@@ -247,9 +413,30 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				rightChild.mutate(mutationRate, minMutation, maxMutation, random);
 			}
 		}
+
+		public void mutate(){
+			Random random = new Random();
+			ExpressionTree mutation;
+			mutation = ExpressionTreeTester.generateRandomTree(ExpressionTreeTester.INITIAL_DEPTH, 
+					ExpressionTreeTester.NUMBER_OF_VARIABLES, random);
+
+			if(this.parent != null && this.parent.leftChild != null && this.parent.rightChild!=null &&
+					this.parent.leftChild.getSize()>this.parent.rightChild.getSize()){
+				this.parent.size -= this.parent.leftChild.getSize();
+				this.parent.leftChild = mutation.root;
+				this.parent.size += mutation.getSize();
+				mutation.root.parent = this.parent;
+			}
+			else if(this.parent!=null && this.parent.rightChild!=null){
+				this.parent.size -= this.parent.rightChild.getSize();
+				this.parent.size += mutation.getSize();
+				this.parent.rightChild = mutation.root;
+				mutation.root.parent = this.parent;
+			}
+		}
 	}
 
-	
+
 
 	/**
 	 * Construcs an expression tree
@@ -258,7 +445,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	 * @param coefficients a list of coefficients to add to the tree
 	 * @param data a data set to calculate the fitness of the tree
 	 */
-	public ExpressionTree(List<Operator> operators, List<String> variables, List<Double> coefficients, DataSet data){
+	public ExpressionTree(List<Operator> operators, List<String> variables, List<Double> coefficients){
 		//Queue to store operator nodes
 		Queue<ExpressionTreeNode> q1 = new LinkedList<ExpressionTreeNode>();
 		//Queue to store terminal nodes
@@ -290,7 +477,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			q2.add(current);
 		}
 		this.root = current;
-		this.fitness = data.fitness(this, false);
+
 	}
 
 	/**
@@ -316,7 +503,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	public double getFitness(){
 		return this.fitness;
 	}
-	
+
 	/**
 	 * @return the fitness of the tree
 	 */
@@ -333,7 +520,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	public double evaluate(HashMap<String, Double> variables){
 		return root.evaluate(variables);
 	}
-	
+
 	public void simplify(){
 		if(this.root.simplify()){
 			this.fitness = Double.MAX_VALUE;
@@ -347,7 +534,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		root.print();
 		System.out.println();
 	}
-	
+
 	public int getSize(){
 		return this.root.getSize();
 	}
@@ -361,6 +548,14 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		}
 		//Deep copies root node and creates new tree rooted at copy
 		return new ExpressionTree(root.copy(), fitness);
+	}
+
+
+	public void mutate(){
+		ExpressionTreeNode mutationPoint = root.getRandomNode();
+		while(mutationPoint.parent!=null)
+			mutationPoint = root.getRandomNode();
+		mutationPoint.mutate();
 	}
 
 	/**
@@ -414,7 +609,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		//Update fitness of offspring
 		offspringOne.fitness = data.fitness(offspringOne, false);
 		offspringTwo.fitness = data.fitness(offspringTwo, false);
-		
+
 		//Simplify offspring
 		offspringOne.simplify();
 		offspringTwo.simplify();
@@ -445,9 +640,9 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	@Override
 	public int compareTo(ExpressionTree other) {
 		int compare = Double.compare(this.fitness, other.fitness);
-//		if(compare==0){
-//			return other.getSize() -this.getSize();
-//		}
+		//		if(compare==0){
+		//			return other.getSize() -this.getSize();
+		//		}
 		return compare;
 	}
 }
