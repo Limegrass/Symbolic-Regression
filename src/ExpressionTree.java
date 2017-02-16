@@ -102,7 +102,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				else if(value == Operator.DIVIDE){
 					if(right == 0.0 ){
 						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
-						return left;
+						return 1000000000 ;
 					}
 					return left / right;
 				}
@@ -235,7 +235,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			if(type == Type.COEFFICIENT){
 				if(random.nextDouble() < mutationRate){
 					//For real coefficients
-					value = (double) value + (double) (random.nextDouble() * (maxMutation - minMutation + 1) + minMutation);
+					value = (double) value + (double) ((maxMutation - minMutation + 1) + minMutation);
 					//For integer coefficients
 					//value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
 				}
@@ -290,7 +290,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			q2.add(current);
 		}
 		this.root = current;
-		this.fitness = data.fitness(this);
+		this.fitness = data.fitness(this, false);
 	}
 
 	/**
@@ -316,6 +316,14 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	public double getFitness(){
 		return this.fitness;
 	}
+	
+	/**
+	 * @return the fitness of the tree
+	 */
+	public void setFitness(double fitness){
+		this.fitness = fitness;
+	}
+
 
 	/**
 	 * 
@@ -338,6 +346,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	public void print(){
 		root.print();
 		System.out.println();
+	}
+	
+	public int getSize(){
+		return this.root.getSize();
 	}
 
 	/**
@@ -400,8 +412,8 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		}
 
 		//Update fitness of offspring
-		offspringOne.fitness = data.fitness(offspringOne);
-		offspringTwo.fitness = data.fitness(offspringTwo);
+		offspringOne.fitness = data.fitness(offspringOne, false);
+		offspringTwo.fitness = data.fitness(offspringTwo, false);
 		
 		//Simplify offspring
 		offspringOne.simplify();
@@ -432,6 +444,10 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	 */
 	@Override
 	public int compareTo(ExpressionTree other) {
-		return Double.compare(this.fitness, other.fitness);
+		int compare = Double.compare(this.fitness, other.fitness);
+//		if(compare==0){
+//			return other.getSize() -this.getSize();
+//		}
+		return compare;
 	}
 }
