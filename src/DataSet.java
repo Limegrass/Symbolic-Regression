@@ -114,13 +114,13 @@ public class DataSet
 		if(testAll){
 			for(HashMap<String,Double> test : data.keySet()){
 				double error = data.get(test) - expression.evaluate(test);
-//				fitness += (error * error) / data.size();
-				fitness+=error*error;
+				fitness += (error * error) / data.size();
+//				fitness+=error*error;
 			}
 		}
 		fitness+=expression.getSize();
-		return fitness;
-//		return Math.sqrt(fitness);
+//		return fitness;
+		return Math.sqrt(fitness);
 	}
 
 

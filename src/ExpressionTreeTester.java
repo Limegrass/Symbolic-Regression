@@ -4,7 +4,7 @@ public class ExpressionTreeTester {
 
 	public static final Operator[] OPERATORS = {Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY, Operator.DIVIDE};
 	public static final double SURVIVAL_RATE = 0.00;
-	public static final int INITIAL_DEPTH = 2;
+	public static final int INITIAL_DEPTH = 4;
 	public static final double MUTATION_RATE = .02;
 	public static final int NUM_BEST_KEPT = 20;
 
@@ -13,8 +13,8 @@ public class ExpressionTreeTester {
 
 	public static final String FILE_Name = "dataset2noZero.csv";
 	public static final int NUMBER_OF_VARIABLES = 3;
-	public static final int MIN_COEFFICIENT = -10;
-	public static final int MAX_COEFFICIENT = 10;
+	public static final int MIN_COEFFICIENT = -100;
+	public static final int MAX_COEFFICIENT = 100;
 	public static final int MIN_MUTATION = -2;
 	public static final int MAX_MUTATION = 2;
 

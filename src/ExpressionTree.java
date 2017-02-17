@@ -10,7 +10,7 @@ import java.util.*;
 public class ExpressionTree implements Comparable<ExpressionTree>{
 	private ExpressionTreeNode root;
 	private double fitness;
-	public static final double EPSILON = 2.5E-1;
+	public static final double EPSILON = 1E-2;
 	/**
 	 * Binary expression tree nodes store node type, value, parent node, left child, and right child 
 	 */
@@ -112,7 +112,24 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				return 0.0;
 			}
 		}
+		
+		private void simplifyValue(ExpressionTreeNode other){
+			if(parent.value == Operator.ADD){
+				other.value = (double)rightChild.value + (double)other.rightChild.value;
+			}
+			else if(parent.value == Operator.SUBTRACT){
+				other.value = (double)rightChild.value - (double)other.rightChild.value;
+			}
+			else if(parent.value == Operator.MULTIPLY){
 
+				other.value = (double)rightChild.value * (double)other.rightChild.value;
+			}
+			//Operation is division
+			else{
+				other.value = (double)rightChild.value / (double)other.rightChild.value;
+			}
+		}
+		
 		public boolean simplify(){
 			if(leftChild != null)
 				leftChild.simplify();
@@ -168,20 +185,35 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 					this.type = Type.COEFFICIENT;
 					this.size = 1;
 				}
-//				else if((this.value == Operator.SUBTRACT || this.value == Operator.ADD) && ((leftChild.type==Type.COEFFICIENT && (double)leftChild.value == 0.0) 
-//						|| (rightChild.type==Type.COEFFICIENT && (double)rightChild.value == 0.0))){
-//
-//					if(leftChild.type == Type.COEFFICIENT && (double)leftChild.value == 0.0){
-//						this.value = rightChild.value;
-//					}
-//					else if(rightChild.type == Type.COEFFICIENT && (double)rightChild.value == 0.0){
-//						this.value = leftChild.value;
-//					}
-//					this.leftChild = null;
-//					this.rightChild = null;
-//					this.type = Type.COEFFICIENT;
-//					this.size = 1;
-//				}
+				else if((this.value == Operator.SUBTRACT || this.value == Operator.ADD) && 
+						((leftChild.type==Type.COEFFICIENT && (double)leftChild.value == 0.0) 
+						|| (rightChild.type==Type.COEFFICIENT && (double)rightChild.value == 0.0))){
+
+					if(leftChild.type == Type.COEFFICIENT && (double)leftChild.value == 0.0 && rightChild!=null){
+						this.value = rightChild.value;
+						this.type = rightChild.type;
+						this.size = rightChild.size;
+					}
+					else if(rightChild.type == Type.COEFFICIENT && (double)rightChild.value == 0.0 && leftChild !=null){
+						this.value = leftChild.value;
+						this.type = leftChild.type;
+						this.size = leftChild.size;
+					} 
+					else{
+						if(this.parent.leftChild==this){
+							this.parent.leftChild = null;
+						}
+						else{
+							this.parent.rightChild = null;
+						}
+					}
+					if(this.type==Type.COEFFICIENT){
+						this.leftChild = null;
+						this.rightChild = null;
+					}
+					
+					
+				}
 
 			}
 			
