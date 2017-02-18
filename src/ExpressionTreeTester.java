@@ -13,10 +13,10 @@ public class ExpressionTreeTester {
 
 	public static final String FILE_Name = "dataset2noZero.csv";
 	public static final int NUMBER_OF_VARIABLES = 3;
-	public static final int MIN_COEFFICIENT = -5;
-	public static final int MAX_COEFFICIENT = 5;
-	public static final int MIN_MUTATION = -1;
-	public static final int MAX_MUTATION = 1;
+	public static final int MIN_COEFFICIENT = -1;
+	public static final int MAX_COEFFICIENT = 1;
+	public static final int MIN_MUTATION = -1000;
+	public static final int MAX_MUTATION = 1000;
 
 	/**
 	 * Generate a random expression tree
