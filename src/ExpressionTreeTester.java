@@ -9,10 +9,10 @@ public class ExpressionTreeTester {
 	public static final int NUM_BEST_KEPT = 20;
 
 	public static final double CUT_OFF = 20.0;
-	public static final int POPULATION_SIZE = 200;
+	public static final int POPULATION_SIZE = 1000;
 
-	public static final String FILE_Name = "dataset1.csv";
-	public static final int NUMBER_OF_VARIABLES = 1;
+	public static final String FILE_Name = "dataset2noZero.csv";
+	public static final int NUMBER_OF_VARIABLES = 3;
 	public static final int MIN_COEFFICIENT = -5;
 	public static final int MAX_COEFFICIENT = 5;
 	public static final int MIN_MUTATION = -1;
@@ -44,9 +44,9 @@ public class ExpressionTreeTester {
 		List<Double> coefficients = new ArrayList<Double>();
 		for(int i = 0; i < numberOfOperators - numberOfVariables + 1; i++){
 			//For real coefficients
-//			coefficients.add((double)(random.nextDouble() * (MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
+			coefficients.add((double)(random.nextDouble() * (MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
 			//For integer coefficient
-						coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
+//						coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
 		}
 		return new ExpressionTree(ops, vars, coefficients);
 	}
@@ -101,7 +101,7 @@ public class ExpressionTreeTester {
 		List<ExpressionTree> bestSet = new ArrayList<ExpressionTree>();
 		for(int i = 0; i < POPULATION_SIZE; i++){
 			ExpressionTree initTree = generateRandomTree(INITIAL_DEPTH, NUMBER_OF_VARIABLES, random);
-			initTree.setFitness(data.fitness(initTree, false)); 
+			initTree.setFitness(data.fitness(initTree, false));
 			trees.add(initTree);
 
 		}
@@ -112,7 +112,6 @@ public class ExpressionTreeTester {
 		System.out.println();
 
 		ExpressionTree bestTree = trees.get(0);
-
 
 		//for(int i = 1; i <= GENERATIONS; i++){
 		int gen = 1;
@@ -136,16 +135,17 @@ public class ExpressionTreeTester {
 				}
 				offspring[0].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
 				offspring[1].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
-				if(offspring[0].getFitness()!=Double.MAX_VALUE && (offspring[0].getFitness() != crossover[0].getFitness() || offspring[0].getSize()<crossover[0].getSize()) 
-						&& (offspring[0].getFitness() != crossover[1].getFitness()) || offspring[0].getSize()<crossover[1].getSize()){
+				if(offspring[0].getFitness()>0 && (offspring[0].getFitness() != crossover[0].getFitness() || offspring[0].getSize()<crossover[0].getSize()) 
+						&& (offspring[0].getFitness() != crossover[1].getFitness() || offspring[0].getSize()<crossover[1].getSize())){
 					nextGen.add(offspring[0]);
-					if(offspring[1].getFitness() < CUT_OFF){
+					if(offspring[0].getFitness() < CUT_OFF){
 						bestSet.add(offspring[0]);
 					}
 
 				}
-				if(offspring[1].getFitness()!=Double.MAX_VALUE &&(offspring[1].getFitness() != crossover[0].getFitness() || offspring[1].getSize()<crossover[0].getSize()) 
-						&& (offspring[1].getFitness() != crossover[1].getFitness()) || offspring[1].getSize()<crossover[1].getSize()){
+				if(offspring[1].getFitness()>0 && nextGen.size() < POPULATION_SIZE 
+						&& (offspring[1].getFitness() != crossover[0].getFitness() || offspring[1].getSize()<crossover[0].getSize()) 
+						&& (offspring[1].getFitness() != crossover[1].getFitness() || offspring[1].getSize()<crossover[1].getSize())){
 					nextGen.add(offspring[1]);
 					if(offspring[1].getFitness() < CUT_OFF){
 						bestSet.add(offspring[1]);
