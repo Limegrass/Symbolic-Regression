@@ -3,19 +3,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Parse CSV Files into a Data Set type for use
  * as a expression fitness function evaluator 
  * when using genetic programming for symbolic regress
  * @author James Ni
+ * @author Chris Lamb
  *
  */
 public class DataSet 
 {
 	public final static double PERCENT_TEST = .5; 
-	HashMap<HashMap<String, Double>, Double > data;
+	HashMap<HashMap<String, Double>, Double > training;
 	HashMap<HashMap<String, Double>, Double > test;
 
 
@@ -27,7 +27,7 @@ public class DataSet
 	 */
 	public DataSet(String fileName)
 	{
-		data = new HashMap<HashMap<String, Double>, Double >();
+		training = new HashMap<HashMap<String, Double>, Double >();
 		test = new HashMap<HashMap<String, Double>, Double >();
 		//A map is a logical way to hold all the values
 		// For the data sets we seem to be working with, there is two decimals of precision, but
@@ -51,7 +51,7 @@ public class DataSet
 						xVals.put( "x" + (i+1) , Double.parseDouble(values[i]));
 					}
 					if(rand.nextDouble() < PERCENT_TEST){
-						data.put(xVals, y);
+						training.put(xVals, y);
 					}
 					else{
 						test.put(xVals, y);
@@ -88,14 +88,7 @@ public class DataSet
 	 * @return the y value
 	 */
 	public double fx(HashMap<String, Double> xValues){
-		return data.get(xValues);
-	}
-
-	/**
-	 * @return the set variable name to value pairs
-	 */
-	public Set<HashMap<String, Double>> xValues(){
-		return data.keySet();
+		return training.get(xValues);
 	}
 
 	/**
@@ -104,22 +97,22 @@ public class DataSet
 	 * @param expression Expression to evaluate how well it fits the data.
 	 * @return The fitness of the inputed expression tree relative to the data set.
 	 */
-	public double fitness(ExpressionTree expression, boolean testAll){
+	public double fitness(ExpressionTree expression, boolean testing){
 		double fitness = 0;
-		for(HashMap<String,Double> map : data.keySet()){
-			double error = data.get(map) - expression.evaluate(map);
-//			fitness += (error * error) / data.size();
-			fitness+=error*error;
+		for(HashMap<String,Double> map : training.keySet()){
+			double error = training.get(map) - expression.evaluate(map);
+			fitness += (error * error) / training.size();
+			//fitness+=error*error;
 		}
-		if(testAll){
-			for(HashMap<String,Double> test : data.keySet()){
-				double error = data.get(test) - expression.evaluate(test);
-				fitness += (error * error) / data.size();
-//				fitness+=error*error;
+		if(testing){
+			for(HashMap<String,Double> test : test.keySet()){
+				double error = training.get(test) - expression.evaluate(test);
+				fitness += (error * error) / test.size();
+			  //fitness+=error*error;
 			}
 		}
-//		fitness+=expression.getSize();
-//		return fitness;
+		//fitness+=expression.getSize();
+		//return fitness;
 		return Math.sqrt(fitness);
 	}
 

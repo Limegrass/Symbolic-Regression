@@ -1,14 +1,23 @@
 import java.util.*;
 
+/**
+ * Performs symbolic regression on data set indicated
+ * 
+ * @author Chris Lamb
+ * @author James Ni
+ *
+ */
+
 public class ExpressionTreeTester {
 
 	public static final Operator[] OPERATORS = {Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY, Operator.DIVIDE};
-	public static final double SURVIVAL_RATE = 0.00;
+	public static final double SURVIVAL_RATE = 0.001;
 	public static final int INITIAL_DEPTH = 3;
-	public static final double MUTATION_RATE = .02;
+	public static final double MUTATION_RATE = .05;
 	public static final int NUM_BEST_KEPT = 20;
 
-	public static final double CUT_OFF = 20.0;
+	public static final int SIZE_LIMIT = 60;
+	public static final double CUT_OFF = 0.1;
 	public static final int POPULATION_SIZE = 1000;
 
 	public static final String FILE_Name = "dataset2noZero.csv";
@@ -23,7 +32,7 @@ public class ExpressionTreeTester {
 	 * @param depth the depth of the tree
 	 * @param numberOfVariables the number of variables in the expression
 	 * @param random a random number generator
-	 * @param data the data set used to generate the tree's fitness
+	 * @param training the data set used to generate the tree's fitness
 	 * @return a random expression tree
 	 */
 	public static ExpressionTree generateRandomTree(int depth, int numberOfVariables, Random random){
@@ -46,7 +55,7 @@ public class ExpressionTreeTester {
 			//For real coefficients
 			coefficients.add((double)(random.nextDouble() * (MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
 			//For integer coefficient
-//						coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
+			//coefficients.add((double)(random.nextInt(MAX_COEFFICIENT - MIN_COEFFICIENT + 1) + MIN_COEFFICIENT));
 		}
 		return new ExpressionTree(ops, vars, coefficients);
 	}
@@ -113,7 +122,6 @@ public class ExpressionTreeTester {
 
 		ExpressionTree bestTree = trees.get(0);
 
-		//for(int i = 1; i <= GENERATIONS; i++){
 		int gen = 1;
 		while(bestSet.size() < NUM_BEST_KEPT){
 			System.out.println("Generating generation " + gen + " ...");
@@ -126,16 +134,16 @@ public class ExpressionTreeTester {
 				ExpressionTree[] crossover = selectForCrossover(trees);
 				ExpressionTree[] offspring = crossover[0].crossover(crossover[1], data);
 				if(random.nextDouble() < MUTATION_RATE){
-					offspring[0].mutate();
+					offspring[0].mutate(INITIAL_DEPTH, NUMBER_OF_VARIABLES);
 					offspring[0].setFitness(data.fitness(offspring[0], false));
 				}
 				if(random.nextDouble() < MUTATION_RATE){
-					offspring[1].mutate();
+					offspring[1].mutate(INITIAL_DEPTH, NUMBER_OF_VARIABLES);
 					offspring[1].setFitness(data.fitness(offspring[1], false));
 				}
 				offspring[0].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
 				offspring[1].mutate(MUTATION_RATE, MIN_MUTATION, MAX_MUTATION, random);
-				if(offspring[0].getFitness()>0 && (offspring[0].getFitness() != crossover[0].getFitness() || offspring[0].getSize()<crossover[0].getSize()) 
+				if(offspring[0].getFitness()>0 && offspring[0].getSize()<SIZE_LIMIT && (offspring[0].getFitness() != crossover[0].getFitness() || offspring[0].getSize()<crossover[0].getSize()) 
 						&& (offspring[0].getFitness() != crossover[1].getFitness() || offspring[0].getSize()<crossover[1].getSize())){
 					nextGen.add(offspring[0]);
 					if(offspring[0].getFitness() < CUT_OFF){
@@ -143,7 +151,8 @@ public class ExpressionTreeTester {
 					}
 
 				}
-				if(offspring[1].getFitness()>0 && nextGen.size() < POPULATION_SIZE 
+				if(offspring[1].getFitness()>0 && nextGen.size() < POPULATION_SIZE &&
+						offspring[1].getSize()<SIZE_LIMIT 
 						&& (offspring[1].getFitness() != crossover[0].getFitness() || offspring[1].getSize()<crossover[0].getSize()) 
 						&& (offspring[1].getFitness() != crossover[1].getFitness() || offspring[1].getSize()<crossover[1].getSize())){
 					nextGen.add(offspring[1]);
@@ -160,6 +169,8 @@ public class ExpressionTreeTester {
 			System.out.println("Generation " + gen + " best tree:");
 			trees.get(0).print();
 			System.out.println(trees.get(0).getFitness());
+			System.out.println(trees.get(0).getSize());
+
 			System.out.println();
 			gen++;
 		}
