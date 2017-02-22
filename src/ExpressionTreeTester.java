@@ -17,7 +17,11 @@ public class ExpressionTreeTester {
 	public static final int NUM_BEST_KEPT = 20;
 
 	public static final int SIZE_LIMIT = 60;
+<<<<<<< HEAD
 	public static final double CUT_OFF = 0.1;
+=======
+	public static final double CUT_OFF = 20.0;
+>>>>>>> origin/master
 	public static final int POPULATION_SIZE = 1000;
 
 	public static final String FILE_Name = "dataset2noZero.csv";
