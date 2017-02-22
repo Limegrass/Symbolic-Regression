@@ -17,14 +17,10 @@ public class ExpressionTreeTester {
 	public static final int NUM_BEST_KEPT = 20;
 
 	public static final int SIZE_LIMIT = 60;
-<<<<<<< HEAD
 	public static final double CUT_OFF = 0.1;
-=======
-	public static final double CUT_OFF = 20.0;
->>>>>>> origin/master
 	public static final int POPULATION_SIZE = 1000;
 
-	public static final String FILE_Name = "dataset2noZero.csv";
+	public static final String FILE_Name = "dataset2.csv";
 	public static final int NUMBER_OF_VARIABLES = 3;
 	public static final int MIN_COEFFICIENT = -1;
 	public static final int MAX_COEFFICIENT = 1;
