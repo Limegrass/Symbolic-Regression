@@ -1,6 +1,6 @@
 
 public enum Operator {
-	ADD, SUBTRACT, MULTIPLY, DIVIDE, EXP, SIN, COS, LOG;
+	ADD, SUBTRACT, MULTIPLY, DIVIDE;
 	
 	@Override
 	public String toString(){
@@ -15,18 +15,6 @@ public enum Operator {
 		}
 		if(this == DIVIDE) {
 			return " / ";
-		}
-		if(this == EXP){
-			return " e^";
-		}
-		if(this == SIN){
-			return " Sin[";
-		}
-		if(this == COS){
-			return " Cos[";
-		}
-		if(this == LOG){
-			return " Log[";
 		}
 		return "unknown";
 	}

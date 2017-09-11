@@ -61,42 +61,17 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 		 * Prints the expression represented by the node and its children
 		 */
 		public void print(){
-			if(value == Operator.LOG
-					|| value == Operator.SIN
-					|| value == Operator.COS)
-			{
-				System.out.print(value.toString() + "");
-				if(leftChild != null){
-					if(parent!=null)
-						System.out.print("(");
-					leftChild.print();
-				}
-
-				System.out.print(" + ");
-
-				if(rightChild != null){
-					rightChild.print();
-					if(parent!=null)
-						System.out.print(")");
-				}
-				System.out.print("]");
+			if(leftChild != null){
+				if(parent!=null)
+					System.out.print("(");
+				leftChild.print();
 			}
-			else{
-				if(leftChild != null){
-					if(parent!=null)
-						System.out.print("(");
-					leftChild.print();
-				}
-				System.out.print(value.toString() + "");
-
-
-				if(rightChild != null){
-					rightChild.print();
-					if(parent!=null)
-						System.out.print(")");
-				}
+			System.out.print(value.toString() + "");
+			if(rightChild != null){
+				rightChild.print();
+				if(parent!=null)
+					System.out.print(")");
 			}
-
 		}
 
 		/**
@@ -128,32 +103,16 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 					return left * right;
 				}
 				else if(value == Operator.DIVIDE){
-					if(right  == 0.0 ){
+					if(right == 0.0 ){
 						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
 						return 1000000000 ;
 					}
 					return left / right;
 				}
-				else if(value == Operator.EXP){
-					return Math.exp(left + right);
-				}
-				else if(value == Operator.LOG){
-					if(left + right <= 0.0 ){
-						//Dividing by 0 returns 1000000.0 right now we need to figure out what we want to do with this.
-						return 0 ;
-					}
-					return Math.log(left+right);
-				}
-				else if(value == Operator.SIN){
-					return Math.sin(left+right);
-				}
-				else if(value == Operator.COS){
-					return Math.cos(left+right);
-				}
 				return 0.0;
 			}
 		}
-
+		
 		private boolean evaluateOperator(ExpressionTreeNode operatorNode, 
 				ExpressionTreeNode child1, ExpressionTreeNode child2){
 			if(parent.value == Operator.ADD){
@@ -167,7 +126,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 				this.value = (double)child1.value * (double)child2.value;
 			}
 			//Operation is division
-			else if(parent.value == Operator.DIVIDE){
+			else{
 				if(child1 != null && child2 != null){
 					this.size = 1 + leftChild.size + rightChild.size;
 				}
@@ -178,7 +137,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			}
 			return false;
 		}
-
+		
 		/**
 		 * Simplifies the tree rooted at node
 		 * @return true if tree contains an illegal operation false otherwise
@@ -344,9 +303,9 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 			if(type == Type.COEFFICIENT){
 				if(random.nextDouble() < mutationRate){
 					//For real coefficients
-//					value = (double) value + (double) (random.nextDouble() * (maxMutation - minMutation + 1) + minMutation);
+					value = (double) value + (double) (random.nextDouble() * (maxMutation - minMutation + 1) + minMutation);
 					//For integer coefficients
-					value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
+					//value = (double) value + (double) (random.nextInt(maxMutation - minMutation + 1) + minMutation);
 				}
 			}
 			if(leftChild != null){
@@ -588,7 +547,7 @@ public class ExpressionTree implements Comparable<ExpressionTree>{
 	public void mutate(double mutationRate, int minMutation, int maxMutation, Random random){
 		root.mutate(mutationRate, minMutation, maxMutation, random);
 	}
-
+	
 	/**
 	 * Replaces a random subtree with a new randomly generated tree
 	 */
